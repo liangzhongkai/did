@@ -1,0 +1,17 @@
+{
+  "name": "did-zk-circuits",
+  "version": "1.0.0",
+  "description": "ZK circuits for L2 identity and privacy credentials",
+  "scripts": {
+    "build": "npm run build:is-adult && npm run build:is-balance-above",
+    "build:is-adult": "mkdir -p build/is_adult && circom is_adult_main.circom --r1cs --wasm --sym -l node_modules -o build/is_adult",
+    "build:is-balance-above": "mkdir -p build/is_balance_above && circom is_balance_above_main.circom --r1cs --wasm --sym -l node_modules -o build/is_balance_above",
+    "test": "mocha test/**/*.test.js --timeout 120000"
+  },
+  "devDependencies": {
+    "circomlib": "^2.0.5",
+    "circom_tester": "^0.0.20",
+    "chai": "^4.5.0",
+    "mocha": "^10.8.2"
+  }
+}

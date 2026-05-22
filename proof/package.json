@@ -1,0 +1,28 @@
+{
+  "name": "did-proof-verification",
+  "version": "1.0.0",
+  "description": "Groth16 proof generation and on-chain verification",
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "generate:is-adult": "node scripts/generateProof.js is_adult",
+    "generate:is-balance-above": "node scripts/generateProof.js is_balance_above",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.js",
+    "deploy:scroll": "hardhat run scripts/deploy.js --network scrollSepolia",
+    "lint": "eslint scripts/ test/ --ext .js",
+    "lint:sol": "solhint 'contracts/**/*.sol'"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "chai": "^4.5.0",
+    "dotenv": "^16.6.1",
+    "eslint": "^8.57.1",
+    "ethers": "^6.13.4",
+    "hardhat": "^2.22.17",
+    "snarkjs": "^0.7.5",
+    "solhint": "^5.0.3"
+  }
+}

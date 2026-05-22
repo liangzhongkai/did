@@ -1,0 +1,15 @@
+{
+  "name": "l2-did-privacy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "L2 identity and privacy credential system with ZK proofs",
+  "scripts": {
+    "setup": "npm run build --prefix circuits && npm run setup --prefix proof",
+    "test": "npm test --prefix circuits && npm test --prefix proof && npm test --prefix did && npm test --prefix frontend",
+    "test:circuits": "npm test --prefix circuits",
+    "test:proof": "npm test --prefix proof",
+    "test:did": "npm test --prefix did",
+    "test:frontend": "npm test --prefix frontend",
+    "dev": "npm run dev --prefix frontend"
+  }
+}

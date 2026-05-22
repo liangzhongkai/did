@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+cache/
+artifacts/
+typechain-types/
+coverage/
+.env
+.env.local
+*.ptau
+!proof/keys/pot14_final.ptau
+proof/keys/*_0000.zkey
+proof/keys/*_0001.zkey
+proof/keys/verification_key.json
+.DS_Store
+*.log
+frontend/dist/

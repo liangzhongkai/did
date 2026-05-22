@@ -1,0 +1,93 @@
+:root {
+  font-family: Inter, system-ui, sans-serif;
+  color: #e8ecf1;
+  background: #0f1419;
+}
+
+body {
+  margin: 0;
+}
+
+.app {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem 4rem;
+}
+
+header h1 {
+  margin-bottom: 0.25rem;
+}
+
+header p {
+  color: #9aa7b5;
+}
+
+.card {
+  background: #1a222c;
+  border: 1px solid #2a3544;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.wallet-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: center;
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tabs button.active {
+  background: #3b82f6;
+  color: white;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+
+input {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #0f1419;
+  color: inherit;
+}
+
+button {
+  border: 1px solid #334155;
+  background: #243041;
+  color: inherit;
+  border-radius: 8px;
+  padding: 0.55rem 0.9rem;
+  cursor: pointer;
+}
+
+button.primary {
+  margin-top: 0.5rem;
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status {
+  margin-top: 1rem;
+  word-break: break-all;
+  color: #cbd5e1;
+}
