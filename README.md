@@ -77,5 +77,5 @@ Open http://localhost:5173, connect MetaMask on Scroll Sepolia, generate a proof
 ## Documentation
 
 - [Proposal](doc/proposal.md)
-- [Detailed Design](doc/detailed-design.md)
+- [Detailed Design](doc/detailed-design.md) — includes [module flow diagram](doc/images/module-flow.png)
 - [Progress](doc/tasks/progress.md)
