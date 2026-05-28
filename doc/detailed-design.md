@@ -2,11 +2,100 @@
 
 ## 总体架构
 
-项目分为四个独立模块，每个模块可单独开发与测试。
-┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────┐
-│ ZK 电路模块 │───▶│ 证明生成与验证 │───▶│ DID 集成模块 │───▶│ L2 DApp 交互模块 │
-│ (Circom) │ │ (snarkjs+Sol) │ │ (Polygon ID) │ │ (前端+合约部署) │
-└─────────────────┘ └─────────────────┘ └─────────────────┘ └─────────────────────┘
+项目分为四个独立模块。模块间存在两类依赖：
+
+- **构建时依赖**（一次性）：上游产出文件，下游读取
+- **运行时依赖**（用户操作时）：前端/DID 在业务过程中调用上游产物
+
+### 构建时流水线（`npm run setup`）
+
+```
+┌──────────────────┐
+│  ① circuits/     │  Circom 编译
+│  IsAdult         │  ──产出──▶  *.r1cs, *.wasm
+│  IsBalanceAbove  │
+└────────┬─────────┘
+         │ ② 读取 r1cs + wasm
+         ▼
+┌──────────────────┐
+│  ③ proof/        │  Groth16 可信设置 (snarkjs)
+│  setup.js        │  ──产出──▶  *.zkey, verification_key.json
+│                  │            IsAdultVerifier.sol
+│                  │            IsBalanceAboveVerifier.sol
+│                  │            CredentialVerifier.sol
+└────────┬─────────┘
+         │ ④ 复制 wasm + zkey          │ ⑤ 读取 vk hash（可选）
+         ▼                               ▼
+┌──────────────────┐            ┌──────────────────┐
+│  ⑥ frontend/     │            │  did/            │
+│  public/zk/      │            │  签发 VC 时绑定   │
+│  (浏览器证明资源)  │            │  电路 vk hash    │
+└──────────────────┘            └──────────────────┘
+```
+
+| 步骤 | 执行方 | 使用的上游 | 产出 |
+|------|--------|-----------|------|
+| ① | `circuits/` | circomlib | `build/*/is_*_main.r1cs`, `*.wasm` |
+| ②③ | `proof/scripts/setup.js` | ① 的 r1cs + wasm | `keys/*_final.zkey`, `keys/*_verification_key.json`, `contracts/*.sol` |
+| ④ | `frontend/scripts/copy-zk-assets.sh` | ① 的 wasm，③ 的 zkey | `frontend/public/zk/` |
+| ⑤ | `did/src/core.ts` | ③ 的 `verification_key.json` | VC 中的 `verificationKeyHash` 字段 |
+| ⑥ | `proof/scripts/deploy.js` | ③ 的 Solidity 合约 | 链上 `CredentialVerifier` 地址 |
+
+### 运行时业务流程（用户操作 DApp）
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 用户
+    participant FE as frontend/
+    participant C as circuits/ 产物
+    participant P as proof/ 产物
+    participant Chain as Scroll Sepolia
+    participant DID as did/ (可选)
+
+    User->>FE: 输入 birthdate / balance + 公开参数
+    FE->>C: 加载 public/zk/*.wasm
+    FE->>P: 加载 public/zk/*.zkey
+    FE->>FE: snarkjs.groth16.fullProve() 本地生成证明
+    Note over FE: 隐私数据不出浏览器
+
+    opt DID 凭证流程（可选）
+        DID->>P: 读取 verification_key.json 计算 hash
+        DID->>DID: Issuer 签发 VC（绑定电路 + vk hash）
+        DID->>DID: Verifier 校验 VC 签名
+        DID->>P: 比对 publicSignals 与 VC 声明
+    end
+
+    FE->>FE: toContractArgs(proof, publicSignals)
+    FE->>Chain: 调用 CredentialVerifier.verifyAdult / verifyBalance
+    Chain->>P: Groth16Verifier 链上验签
+    Chain-->>FE: 交易成功 / revert
+    FE-->>User: 显示结果
+```
+
+| 步骤 | 执行模块 | 调用的功能 / 产物 | 说明 |
+|------|----------|-------------------|------|
+| 1 | `frontend/` | — | 用户输入私有 + 公开信号 |
+| 2 | `frontend/` → `circuits/` | `*.wasm` | witness 计算逻辑 |
+| 3 | `frontend/` → `proof/` | `*_final.zkey` | Groth16 证明密钥 |
+| 4 | `frontend/` | snarkjs | 在浏览器本地生成 `{ proof, publicSignals }` |
+| 5 | `did/` → `proof/` | `verification_key.json`, `public.json` | **可选**：VC 绑定电路，验证 publicSignals |
+| 6 | `frontend/` | `toContractArgs()` | 将 proof 转为 Solidity 参数格式 |
+| 7 | `frontend/` → `proof/` | `CredentialVerifier` ABI + 部署地址 | viem 发交易 |
+| 8 | 链上合约 | `IsAdultVerifier` / `IsBalanceAboveVerifier` | Groth16 验证，emit 事件 |
+
+### 模块间依赖一览
+
+```
+circuits/          proof/              did/                 frontend/
+─────────          ──────              ────                 ────────
+IsAdult.circom ──▶ setup.js 读 r1cs
+IsBalanceAbove ──▶ generateProof.js 读 wasm ──▶ loadVkHash ──▶ copy-zk-assets
+                   export verifier.sol ──────────────────────▶ deploy 地址 + ABI
+                   examples/proof.json ──▶ validateZkBinding
+```
+
+> **最简路径**（跳过 DID）：`circuits → proof → frontend`，用户直接生成 ZK 证明并上链验证。
 
 ## 模块 1：ZK 电路 (zk-circuit)
 
@@ -71,13 +160,11 @@
 - 前端是单页应用还是多页面？是否需要托管 IPFS？
 - 证明生成在前端运行还是通过后端服务？若在前端运行，需加载 snarkjs 的浏览器版。
 
-## 数据流
+## 数据流（已确认实现）
 
-1. 用户通过前端输入隐私数据（生日/余额）。
-2. 前端调用模块 1 编译的电路与模块 2 的证明密钥，本地生成 ZK 证明。
-3. 可选：模块 3 将证明封装为可验证凭证，并关联 DID。
-4. 前端将证明 calldata 发送到模块 2/4 的链上验证合约。
-5. 合约验证并返回成功，DApp 可据此执行对应业务逻辑。
+构建阶段见上文「构建时流水线」①–⑥；用户操作阶段见「运行时业务流程」①–⑧。
+
+核心原则：**隐私输入只在 `frontend/` 浏览器内处理**，经 `circuits/` 的 wasm 计算 witness，用 `proof/` 的 zkey 生成证明，最终由 `proof/` 部署的合约在 Scroll Sepolia 验证。
 
 ## 接口定义
 

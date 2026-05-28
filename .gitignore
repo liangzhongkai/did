@@ -1,17 +1,66 @@
+# Dependencies
 node_modules/
+
+# Environment & secrets (never commit real keys or RPC URLs with auth)
+.env
+.env.*
+!.env.example
+proof/.env
+frontend/.env
+
+# Build outputs
 dist/
 build/
+frontend/dist/
+
+# Hardhat / Solidity
 cache/
 artifacts/
 typechain-types/
-coverage/
-.env
-.env.local
+deployments/
+.openzeppelin/
+
+# Circom / snarkjs build artifacts
+circuits/build/
+*.r1cs
+*.sym
+*.wtns
+
+# ZK ceremony & keys
 *.ptau
 !proof/keys/pot14_final.ptau
-proof/keys/*_0000.zkey
-proof/keys/*_0001.zkey
+proof/keys/*_000*.zkey
 proof/keys/verification_key.json
-.DS_Store
+
+# Generated proofs (may contain real birthdate/balance from local runs)
+proof/examples/*/generated/
+
+# Test & coverage
+coverage/
+.nyc_output/
+
+# Logs
 *.log
-frontend/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# Temp
+tmp/
+temp/
+*.tmp
